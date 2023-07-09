@@ -14,8 +14,12 @@ class ScoreVoting(Voting):
             
         def isValid(self, try_handle_invalid=True, score_range=(0, 5), 
                     only_int=True):
-            # fill missing values with 0
-            self.scores.fillna(0, inplace=True)
+            if try_handle_invalid:
+                # fill missing values with 0
+                self.scores.fillna(0, inplace=True)
+            # check if there is any missing value
+            if self.scores.isna().any():
+                return False
             # check if self.scores is numeric
             if not np.issubdtype(self.scores.dtype, np.number):
                 return False

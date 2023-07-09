@@ -9,17 +9,25 @@ class RankedChoiceVoting(Voting):
     
     class RankedChoiceBallot(Voting.Ballot):
         
-        def __init__(self, scores):
+        def __init__(self, scores, reverse=False):
             super().__init__(scores)
+            self.reverse = reverse
             
-        def isValid(self, try_handle_invalid=True, reverse=False, 
-                    allowed_rank):
-            # fill missing values with 0
-            self.scores.fillna(0, inplace=True)
+        def isValid(self, try_handle_invalid=True, allowed_rank):
+            if self.try_handle_invalid:
+                if self.reverse:
+                    default_score = self.scores.min()-1
+                else:
+                    default_score = self.scores.max()+1
+                # treat missing values as most disliked
+                self.scores.fillna(default_score, inplace=True)
+            # check if there is any missing value
+            if self.scores.isna().any():
+                return False
             # check if self.scores is numeric
             if not np.issubdtype(self.scores.dtype, np.number):
                 return False
-            # put out-of-bound scores into the valid range, if specified to
+            # converts scores to 
             if try_handle_invalid:
                 self.scores.loc[self.scores>score_range[1]] = score_range[1]
                 self.scores.loc[self.scores<score_range[0]] = score_range[0]
