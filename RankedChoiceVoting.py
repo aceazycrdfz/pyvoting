@@ -13,7 +13,7 @@ class RankedChoiceVoting(Voting):
             super().__init__(scores)
             self.reverse = reverse
             
-        def isValid(self, try_handle_invalid=True, allowed_rank):
+        def isValid(self, try_handle_invalid=True, allowed_rank=0):
             if self.try_handle_invalid:
                 if self.reverse:
                     default_score = self.scores.min()-1
@@ -27,24 +27,31 @@ class RankedChoiceVoting(Voting):
             # check if self.scores is numeric
             if not np.issubdtype(self.scores.dtype, np.number):
                 return False
-            # converts scores to 
+            # flip the scores if the score is reversed
+            if self.reverse:
+                self.scores = self.scores.max()+self.scores.min()-self.scores
+            # converts scores to ranks, smaller rank is always preferred
             if try_handle_invalid:
-                self.scores.loc[self.scores>score_range[1]] = score_range[1]
-                self.scores.loc[self.scores<score_range[0]] = score_range[0]
-                # round non-integers, if necessary
-                if only_int:
-                    self.scores = self.scores.round(0)
+                self.rank = pd.Series([(scores<scores[c]).sum()+1 for c in 
+                                       self.scores.index])
+                self.rank.loc[self.rank>allowed_rank] = allowed_rank+1
+            else:
+                self.rank = self.scores
             # check whether the ballot satisfy the constraints
-            return (self.scores.between(score_range[0], score_range[1]).all() 
-                    and (not only_int or self.scores.astype("float").apply(
-                    lambda x: x.is_integer()).all()))
+            for i in range(1, allowed_rank+1):
+                if self.rank.value_counts(i) != 1:
+                    return False
+            return self.rank.between(1, allowed_rank+1).all()
         
         def Vote(self, candidates):
-            # vote the score corresponding to each candidate
-            return self.scores.loc[candidates]
+            # if all candidates tied for the last place, vote 0 for everyone
+            if self.rank.loc[candidates].min()==self.rank.max():
+                return pd.Series(0, index=candidates)
+            # vote 1 for most preferred candidate and 0 for everyone else
+            return (self.rank==self.rank.min()).astype(int)
         
         def Export(self, candidates):
-            return self.Vote(candidates)
+            return self.rank
     
     def __init__(self, candidates, try_handle_invalid=True, reverse=False, 
                  allowed_rank=0):
