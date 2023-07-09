@@ -5,15 +5,15 @@ import pandas as pd
 import numpy as np
 from Voting import Voting
 
-class ScoreVoting(Voting):
+class RankedChoiceVoting(Voting):
     
-    class ScoreBallot(Voting.Ballot):
+    class RankedChoiceBallot(Voting.Ballot):
         
         def __init__(self, scores):
             super().__init__(scores)
             
-        def isValid(self, try_handle_invalid=True, score_range=(0, 5), 
-                    only_int=True):
+        def isValid(self, try_handle_invalid=True, reverse=False, 
+                    allowed_rank):
             # fill missing values with 0
             self.scores.fillna(0, inplace=True)
             # check if self.scores is numeric
@@ -38,31 +38,38 @@ class ScoreVoting(Voting):
         def Export(self, candidates):
             return self.Vote(candidates)
     
-    def __init__(self, candidates, try_handle_invalid=True, score_range=(0, 5), 
-                 only_int=True):
+    def __init__(self, candidates, try_handle_invalid=True, reverse=False, 
+                 allowed_rank=0):
         super().__init__(candidates, try_handle_invalid)
         """
         New Parameters
-        score_range : tuple, default=(0, 5)
-            an integer tuple representing the lower bound and the upper bound 
-            of the scores, both inclusive
-        only_int : bool, default=True
-            whether only integer scores is allowed
+        reverse : bool, default=False
+            default is #1 is the most preferred and #2 the second, etc...
+            if set to True, bigger numbers are more preferred instead
+        allowed_rank : int, default=0
+            each ballot can only list the top allowed_rank favorite candidates
+            if set to 0, there is no limit on it
         """
-        self.score_range = score_range
-        self.only_int = only_int
+        self.reverse = reverse
+        if allowed_rank==0:
+            allowed_rank = len(candidates)
+        self.allowed_rank = allowed_rank
     
     def AddBallot(self, new_ballot):
-        # if some candidates have no score, fill them with 0
+        # if some candidates have no score, treat them as most disliked
         if self.try_handle_invalid:
             new_ballot = new_ballot.copy()
+            if self.reverse:
+                default_score = new_ballot.min()-1
+            else:
+                default_score = new_ballot.max()+1
             for c in self.candidates:
                 if c not in new_ballot:
-                    new_ballot[c] = 0
+                    new_ballot[c] = default_score
         ballot = self.ScoreBallot(new_ballot)
         try:
-            if ballot.isValid(self.try_handle_invalid, self.score_range, 
-                              self.only_int):
+            if ballot.isValid(self.try_handle_invalid, self.reverse, 
+                              self.allowed_rank):
                 self.ballots.append(ballot)
                 return True
             return False

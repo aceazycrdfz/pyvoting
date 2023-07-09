@@ -76,7 +76,6 @@ class STARVoting(Voting):
                 return True
             return False
         except:
-            print(new_ballot)
             return False
     
     def ImportBallots(self, filename):

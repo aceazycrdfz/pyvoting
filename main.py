@@ -16,19 +16,19 @@ if __name__ == "__main__":
     
     print(election.AddBallot(pd.Series({"Trump":5,
                                         "Pence":1,
-                                        "Biden":3,
-                                        "Clinton":0})))
+                                        "Biden":1,
+                                        "Clinton":1})))
     
     print(election.AddBallot(pd.Series({"Trump":1,
                                         "Pence":2,
-                                        "Biden":3,
-                                        "Clinton":4})))
+                                        "Biden":1,
+                                        "Clinton":1})))
     
     print(election.AddBallot(pd.Series({"Trump":1,
                                         "Pence":2,
-                                        "Biden":3,
-                                        "Clinton":4})))
+                                        "Biden":1,
+                                        "Clinton":1})))
     
-    print(election.RunElection(["Trump", "Pence"]))
+    print(election.RunElection())
     print(election.ExportBallots("ballot.xlsx"))
     
