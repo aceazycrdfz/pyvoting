@@ -14,7 +14,7 @@ class RankedChoiceVoting(Voting):
             self.reverse = reverse
             
         def isValid(self, try_handle_invalid=True, allowed_rank=0):
-            if self.try_handle_invalid:
+            if try_handle_invalid:
                 if self.reverse:
                     default_score = self.scores.min()-1
                 else:
@@ -32,14 +32,15 @@ class RankedChoiceVoting(Voting):
                 self.scores = self.scores.max()+self.scores.min()-self.scores
             # converts scores to ranks, smaller rank is always preferred
             if try_handle_invalid:
-                self.rank = pd.Series([(scores<scores[c]).sum()+1 for c in 
-                                       self.scores.index])
+                self.rank = pd.Series([(self.scores<self.scores[c]).sum()+1 
+                                       for c in self.scores.index],
+                                      index=self.scores.index)
                 self.rank.loc[self.rank>allowed_rank] = allowed_rank+1
             else:
                 self.rank = self.scores
             # check whether the ballot satisfy the constraints
             for i in range(1, allowed_rank+1):
-                if self.rank.value_counts(i) != 1:
+                if self.rank.value_counts()[i] != 1:
                     return False
             return self.rank.between(1, allowed_rank+1).all()
         
@@ -48,7 +49,7 @@ class RankedChoiceVoting(Voting):
             if self.rank.loc[candidates].min()==self.rank.max():
                 return pd.Series(0, index=candidates)
             # vote 1 for most preferred candidate and 0 for everyone else
-            return (self.rank==self.rank.min()).astype(int)
+            return (self.rank==self.rank.loc[candidates].min()).astype(int)
         
         def Export(self, candidates):
             return self.rank
@@ -81,10 +82,9 @@ class RankedChoiceVoting(Voting):
             for c in self.candidates:
                 if c not in new_ballot:
                     new_ballot[c] = default_score
-        ballot = self.ScoreBallot(new_ballot)
+        ballot = self.RankedChoiceBallot(new_ballot, self.reverse)
         try:
-            if ballot.isValid(self.try_handle_invalid, self.reverse, 
-                              self.allowed_rank):
+            if ballot.isValid(self.try_handle_invalid, self.allowed_rank):
                 self.ballots.append(ballot)
                 return True
             return False
