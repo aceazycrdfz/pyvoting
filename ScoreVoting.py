@@ -57,11 +57,16 @@ class ScoreVoting(Voting):
         self.only_int = only_int
     
     def AddBallot(self, new_ballot):
-        # if some candidates have no score, fill them with 0
         new_ballot = new_ballot.copy()
+        if self.try_handle_invalid:
+            # if some candidates have no score, fill the scores with 0
+            default_score = 0
+        else:
+            # if some candidates have no score, fill the scores with NaN
+            default_score = np.nan
         for c in self.candidates:
             if c not in new_ballot:
-                new_ballot[c] = 0
+                new_ballot[c] = default_score
         ballot = self.ScoreBallot(new_ballot)
         try:
             if ballot.isValid(self.try_handle_invalid, self.score_range, 

@@ -51,11 +51,16 @@ class ApprovalVoting(Voting):
                            for c in self.candidates], 
                           index = self.candidates))
         else:
-            # if some candidates have no score, fill them with 0
             new_ballot = new_ballot.copy()
+            if self.try_handle_invalid:
+                # if some candidates have no score, fill the scores with 0
+                default_score = 0
+            else:
+                # if some candidates have no score, fill the scores with NaN
+                default_score = np.nan
             for c in self.candidates:
                 if c not in new_ballot:
-                    new_ballot[c] = 0
+                    new_ballot[c] = default_score
             ballot = self.ApprovalBallot(new_ballot)
         try:
             if ballot.isValid(self.try_handle_invalid):

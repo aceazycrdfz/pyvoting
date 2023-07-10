@@ -74,12 +74,16 @@ class RankedChoiceVoting(Voting):
         self.allowed_rank = allowed_rank
     
     def AddBallot(self, new_ballot):
-        # if some candidates have no score, treat them as most disliked
         new_ballot = new_ballot.copy()
-        if self.reverse:
-            default_score = new_ballot.min()-1
+        if self.try_handle_invalid:
+            # if some candidates have no score, treat them as most disliked
+            if self.reverse:
+                default_score = new_ballot.min()-1
+            else:
+                default_score = new_ballot.max()+1
         else:
-            default_score = new_ballot.max()+1
+            # if some candidates have no score, fill the scores with NaN
+            default_score = np.nan
         for c in self.candidates:
             if c not in new_ballot:
                 new_ballot[c] = default_score
