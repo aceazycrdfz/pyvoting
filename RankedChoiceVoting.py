@@ -38,11 +38,13 @@ class RankedChoiceVoting(Voting):
                 self.rank.loc[self.rank>allowed_rank] = allowed_rank+1
             else:
                 self.rank = self.scores
+            # only ties at the lowest rank is allowed (ignored ranks)
+            bottom_rank = self.rank.max()
             # check whether the ballot satisfy the constraints
-            for i in range(1, allowed_rank+1):
+            for i in range(1, bottom_rank):
                 if self.rank.value_counts()[i] != 1:
                     return False
-            return self.rank.between(1, allowed_rank+1).all()
+            return (self.rank>=1).all() and bottom_rank <= allowed_rank+1
         
         def Vote(self, candidates):
             # if all candidates tied for the last place, vote 0 for everyone
@@ -73,15 +75,14 @@ class RankedChoiceVoting(Voting):
     
     def AddBallot(self, new_ballot):
         # if some candidates have no score, treat them as most disliked
-        if self.try_handle_invalid:
-            new_ballot = new_ballot.copy()
-            if self.reverse:
-                default_score = new_ballot.min()-1
-            else:
-                default_score = new_ballot.max()+1
-            for c in self.candidates:
-                if c not in new_ballot:
-                    new_ballot[c] = default_score
+        new_ballot = new_ballot.copy()
+        if self.reverse:
+            default_score = new_ballot.min()-1
+        else:
+            default_score = new_ballot.max()+1
+        for c in self.candidates:
+            if c not in new_ballot:
+                new_ballot[c] = default_score
         ballot = self.RankedChoiceBallot(new_ballot, self.reverse)
         try:
             if ballot.isValid(self.try_handle_invalid, self.allowed_rank):
