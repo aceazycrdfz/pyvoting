@@ -5,9 +5,9 @@ import pandas as pd
 import numpy as np
 from Voting import Voting
 
-class TierListVoting(Voting):
+class TieredPopularityVoting(Voting):
     
-    class TierListBallot(Voting.Ballot):
+    class TieredPopularityBallot(Voting.Ballot):
         
         def __init__(self, scores, reverse=False):
             super().__init__(scores)
@@ -53,8 +53,8 @@ class TierListVoting(Voting):
             # if all candidates are in the last tier, vote 0 for everyone
             if self.rank.loc[candidates].min()==self.rank.max():
                 return pd.Series(0, index=candidates)
-            # vote 1 for candidates in the top tier and 0 for everyone else
-            return (self.rank==self.rank.loc[candidates].min()).astype(int)
+            # vote 1 for candidates not in the last tier
+            return (self.rank!=self.rank.loc[candidates].max()).astype(int)
         
         def Export(self, candidates):
             return self.rank
@@ -91,7 +91,7 @@ class TierListVoting(Voting):
         for c in self.candidates:
             if c not in new_ballot:
                 new_ballot[c] = default_score
-        ballot = self.TierListBallot(new_ballot, self.reverse)
+        ballot = self.TieredPopularityBallot(new_ballot, self.reverse)
         try:
             if ballot.isValid(self.try_handle_invalid, self.allowed_tier):
                 self.ballots.append(ballot)
