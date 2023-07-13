@@ -25,6 +25,38 @@ In my code, the common framework of repeatedly eliminating the bottom candidate 
 
 Approval voting would be self explanatory had it be named multiple-choice voting. It differs from plurality voting only in that one can vote for (approve) as many candidates as possible and still the winner is the one with the most votes (approval). This simple change fixed the main problem of plurality voting: support for the candidates are no longer exclusive. Voting for unpopular candidates does not affect one's opinion on the popular candidates. Therefore, there will be no reason one would ever vote for a less preferred candidate over a perferred one. 
 
-Approval voting still needs the voters to determine the "approving cutoff" in their mind. This process could be a bit strategic but not in a way that makes one not express their true preference. 
+Approval voting still needs the voters to determine the "approving cutoff" in their mind. This process could be a bit strategic but not in a way that makes one lie about their true preferences. 
 
 Overall, approval voting has the best simplicity and efficency among alternative voting methods. 
+
+# Score Voting
+
+What if instead of full approval and not approval one can express something in between? That's when score voting comes in. Voters vote on a scale (say 0 to 5) and the candidate with the highest total score wins. This gives more flexibility to voters comparing to approval voting. 
+
+Voters are not always incentivized to report their true payoffs in score voting. This is not incentive compatible and a counter-example can be easily made. Nonetheless, just like approval voting, one is never incentivized to give a lower score to a perferred candidate and give a higher score for a less preferred one. 
+
+When using my code, you can specify the acceptable range and whether only integers are allowed. If specified, my code can also help fixing invalid ballots by putting out-of-bound scores back in and round non-integers if necessary. STAR Voting, Normalized Score Voting, and Standardized Score Voting also share these feasures. 
+
+# STAR Voting
+
+...
+
+# Ranked Choice Voting
+
+...
+
+# Tier List Voting
+
+...
+
+# Tiered Popularity Voting
+
+...
+
+# Normalized Score Voting
+
+...
+
+# Standardized Score Voting
+
+...
