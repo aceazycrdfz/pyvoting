@@ -9,23 +9,17 @@ from STARVoting import STARVoting
 from RankedChoiceVoting import RankedChoiceVoting
 from TierListVoting import TierListVoting
 from TieredPopularityVoting import TieredPopularityVoting
+from NormalizedScoreVoting import NormalizedScoreVoting
 
 if __name__ == "__main__":
     
     candidates = ["Trump","Pence","Biden"]
-    election = TieredPopularityVoting(candidates, try_handle_invalid=True, 
-                                      reverse=False, allowed_tier=0)
+    election = NormalizedScoreVoting(candidates, try_handle_invalid=True)
     #print(election.ImportBallots("ballot.xlsx"))
     
     print(election.AddBallot(pd.Series({"Trump":1,
-                                        "Pence":2,
-                                        "Biden":2})))
-    print(election.AddBallot(pd.Series({"Trump":1,
-                                        "Pence":1,
-                                        "Biden":2})))
-    print(election.AddBallot(pd.Series({"Trump":1,
-                                        "Pence":1,
-                                        "Biden":1})))
+                                        "Pence":4,
+                                        "Biden":5})))
     
     print(election.RunElection())
     print(election.ExportBallots("ballot.xlsx"))
