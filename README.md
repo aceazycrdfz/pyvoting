@@ -1,11 +1,17 @@
-# VotingSystems Overview
-This is a election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, how they work, and their recommended practical usage. For detailed examples of using this code, please refer to main.py. 
+# Project Overview
+This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. In Voting.py, there are documentations for every function in this framework in great detail. 
 
-When this code is used to simulate an election, it will return a list ranking all candidates possibly with tied ranks. So although these voting methods are primarily designed for single winner elections, they can be easily extended to letting the top few candidates win. Each candidate also has a log attached, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to STARVoting.py for its special log format). 
+When this code is used to simulate an election, it will return a list ranking all candidates possibly with tied ranks. So although these voting methods are primarily designed for single winner elections, they can be easily extended to letting the top few candidates win. However, this code is NOT made for elections with proportional representation. As for multi-winner elections, there exists better voting methods that my framework cannot support. 
 
-This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can accept and interpret ballots that doesn't strictly follow the required format. In main.py there are many examples for acceptable ballot input for each voting method. 
+My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to STARVoting.py for its special log format). 
 
-The OOP nature of this code makes it very easy to develop new voting methods under my framework! All xxxVoting classes inherit the Voting class where the core RunElection function was already inplemented. You can easily design your own voting method by referring to the implementation of PluralityVoting.py and ApprovalVoting.py. Essentialy, all you need to do is to redefine the Vote function of the your Ballot class. 
+This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can accept and interpret ballots that doesn't strictly follow the required format. There are many examples for acceptable ballot input when I later introduce the voting methods. 
+
+The OOP nature of this code makes it very easy to develop new voting methods under my framework! All xxxVoting classes inherit the Voting class where the core RunElection function was already inplemented. You can easily design your own voting method by mimicking my implementations of these xxxVoting.py. There are very detailed comments explaining every step in the code. Essentialy, all you need to do is to redefine the Vote function of the your Ballot class. 
+
+# How to Use This Code
+
+...
 
 # Incentives for Elimination Process
 
@@ -35,16 +41,15 @@ What if instead of full approval and not approval one can express something in b
 
 Voters are not always incentivized to report their true payoffs in score voting. This is not incentive compatible and a counter-example can be easily made. Nonetheless, just like in approval voting, one is never incentivized to give a lower score to a perferred candidate and give a higher score for a less preferred one. 
 
-When using my code, you can specify the acceptable range and whether only integers are allowed. If specified, my code can also help fixing invalid ballots by putting out-of-bound scores back in and round non-integers if necessary. STAR Voting, Normalized Score Voting, and Standardized Score Voting also share these feasures. 
+When using my code, you can specify the acceptable range and whether only integers are allowed. If specified, my code can also help fixing invalid ballots by putting out-of-bound scores back in and round non-integers if necessary. STAR Voting, Normalized Score Voting, and Standardized Score Voting also support these feasures. 
 
 # STAR Voting
 
-```python
-    print("asdf")
-```
-an inline code `python print("asdf")`
+STAR stands for "Score then Automatic Runoff". It is very similar to score voting: voters rate all candidates on a scale and candidates are ranked by their total score. On top of this, there is an additional runoff round between the 2 best candidates. In the runoff round, each ballot is considered one vote to the candidate with a higher score. The winner of the runoff round wins the election. 
 
-an inline code `print("asdf")`
+STAR voting's tie-breaking is difficult in that there are multiple scenarios for ties, although they are rare. The STAR Voting organization listed 2 [official tie-breaking protocals](https://www.starvoting.org/ties), but they are unnatural and hard to implement. In my code I implemented my own tie-breaking method. In the scoring round, all candidates who has strictly less than 2 other candidates with better scores are qualified in the runoff round. So although there are at least 2 qualifiers, there might be more due to ties in scores. Then the runoff round is like approval voting: among all quanlified candidates, each ballot votes for the candidate(s) assigned with the highest score. Ties in the runoff round is broken by the scoring round score. This tie-breaking rule is easy to understand and implement. (In fact, due to the possibllity of ties, STARVoting is the only voting class that implemented tis own RunElection function)
+
+advantages
 
 # Ranked Choice Voting
 
