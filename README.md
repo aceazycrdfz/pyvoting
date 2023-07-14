@@ -42,9 +42,9 @@ When using my code, you can specify the acceptable range and whether only intege
 ```python
     print("asdf")
 ```
-an inline code 'python print("asdf")'
+an inline code `python print("asdf")`
 
-an inline code 'python print("asdf")'
+an inline code `print("asdf")`
 
 # Ranked Choice Voting
 
