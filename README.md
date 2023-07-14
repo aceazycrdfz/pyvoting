@@ -39,9 +39,9 @@ When using my code, you can specify the acceptable range and whether only intege
 
 # STAR Voting
 
-'''
+```python
     print("asdf")
-'''
+```
 
 # Ranked Choice Voting
 
