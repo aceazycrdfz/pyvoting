@@ -78,7 +78,24 @@ class TierListVoting(Voting):
         self.allowed_tier = allowed_tier
     
     def AddBallot(self, new_ballot):
-        new_ballot = new_ballot.copy()
+        # support a string, a list of lists/strings, or a Series 
+        # to represent a vote
+        if type(new_ballot)==str:
+            new_ballot = pd.Series({new_ballot:1})
+        elif type(new_ballot)==list:
+            new_ballot_copy = new_ballot.copy()
+            new_ballot = pd.Series([], dtype="int64")
+            # a list of list/strings, each list/string is a tier
+            for tier_num, tier_member in enumerate(new_ballot_copy):
+                if type(tier_member)==str:
+                    # the tier is just one string
+                    new_ballot[tier_member] = tier_num+1
+                else:
+                    # the tier is a list
+                    for member in tier_member:
+                        new_ballot.loc[member] = tier_num+1
+        else:
+            new_ballot = new_ballot.copy()
         if self.try_handle_invalid:
             # if some candidates have no score, treat them as most disliked
             if self.reverse:
