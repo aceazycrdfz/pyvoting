@@ -65,9 +65,9 @@ advantages
 
 # Normalized Score Voting
 
-## title 2
+## test
 
-### title 3
+### test
 
 although the support for candidates seems to be in conflict, whenever a candidate is eliminated, its effect on other's scores is gone
 
