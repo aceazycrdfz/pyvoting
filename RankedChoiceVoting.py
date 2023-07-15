@@ -74,7 +74,14 @@ class RankedChoiceVoting(Voting):
         self.allowed_rank = allowed_rank
     
     def AddBallot(self, new_ballot):
-        new_ballot = new_ballot.copy()
+        # support a string, a list of strings, or a Series to represent a vote
+        if type(new_ballot)==str:
+            new_ballot = pd.Series({new_ballot:1})
+        elif type(new_ballot)==list:
+            new_ballot = pd.Series(range(1,len(new_ballot)+1), 
+                                   index=new_ballot)
+        else:
+            new_ballot = new_ballot.copy()
         if self.try_handle_invalid:
             # if some candidates have no score, treat them as most disliked
             if self.reverse:
