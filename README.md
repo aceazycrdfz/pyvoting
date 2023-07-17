@@ -1,3 +1,7 @@
+# UNDER CONSTRUCTION
+
+THIS README IS NOT FINISHED YET!
+
 # Project Overview
 This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. In Voting.py, there are documentations for every function in this framework in great detail. 
 
