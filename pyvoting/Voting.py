@@ -102,7 +102,7 @@ class Voting(ABC):
     
     def ImportBallots(self, filename):
         """
-        Imports ballots from a file to the election. 
+        Imports ballots from an excel spreadsheet to the election. 
         
         Parameters
         filename : str
@@ -120,7 +120,7 @@ class Voting(ABC):
     
     def ExportBallots(self, filename):
         """
-        Exports all valid ballots in this election to a file. 
+        Exports all valid ballots in this election to an excel spreadsheet. 
         
         Parameters
         filename : str

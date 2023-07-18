@@ -3,7 +3,7 @@
 THIS README IS NOT FINISHED YET!
 
 # Project Overview
-This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. 
+This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. The code is available here: https://github.com/aceazycrdfz/pyvoting
 
 When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to STARVoting.py for its special log format). 
 
@@ -12,6 +12,18 @@ My code also support both single-winner elections (RunElection) and multi-winner
 This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can even accept and interpret ballots that doesn't strictly follow the required format. There are many examples for acceptable ballot input when I later introduce the voting methods. 
 
 The OOP nature of this code makes it very easy to develop new voting methods under my framework! All xxxVoting classes inherit the Voting class where the core RunElection function was already inplemented. You can easily design your own voting method by mimicking my implementations of these xxxVoting.py. There are very detailed comments explaining every step in the code. Essentialy, all you need to do is to redefine the Vote function of the your Ballot class. 
+
+# Theoretical Motivations
+
+## Incentives for Elimination Process
+
+(I don't know what to call this because "backward elimination" and "bottom elimination" are terms already used in other scenarios)
+
+Before I proceed to introduce all these voting methods, I will briefly explain why the common RunElection function in the Voting class runs the election by repeatedly eliminating the candidate with the worst score (the SplitSize function is tunable if you define your own voting method). In most election senarios, we care much more about the ranking of the top few candidates than the ranking of the bottom few. Thus, the ranking of the top few candidates needs to be determined with caution and voted with as little distraction as possible. Repeatedly eliminating the candidate at the bottom and does runoff on the rest can achieve this. 
+
+## How This Code Supports Proportional Representation With Multi-winner Election
+
+...
 
 # Code Usage Overview
 
@@ -38,122 +50,96 @@ import pandas as pd
 
 You can refer to the pandas.Series documentations [here](https://pandas.pydata.org/docs/reference/api/pandas.Series.html). For the purpose of using this package you just need to know how to initalize a series using a dict, which is very straightforward. Examples in this document should be sufficient for you to understand. 
 
+All voting methods class inherit the abstract Voting class. Below is the documentations for the Voting class. Most of the time, the usage of the specific voting method classes are the same, but I recommend reading the class specific documentations in the next section as there could be extra parameters or other subtle differences. 
+
+The constructor:
 ```python
-    def __init__(self, candidates, try_handle_invalid=True):
-        """
-        Initializes an election using this voting system. 
-        
-        Parameters
-        candidates : list
-            an non-empty list of unique strings representing the candidates
-        try_handle_invalid : bool, default=True
-            whether we attempt to fix ballots that seems invalid
-        """
+def __init__(self, candidates, try_handle_invalid=True):
+    """
+    Initializes an election using this voting system. 
     
-    def AddBallot(self, new_ballot):
-        """
-        Adds a ballot to the election if it is valid. 
-        
-        Parameters
-        new_ballot
-            a representation of the ballot interpretable by this voting system
-        
-        Returns
-        bool
-            whether this ballot is valid and added successfully
-        """
+    Parameters
+    candidates : list
+        an non-empty list of unique strings representing the candidates
+    try_handle_invalid : bool, default=True
+        whether we attempt to fix ballots that seems invalid
+    """
+```
+I STRONGLY encourage everyone to set try_handle_invalid to be True at all times. For many voting methods, the strict format requires a score specified for every candidate, which can be annoying to the users. Setting this parameter to True grants an unbelievable amount of flexibility when ballots are parsed. In the next section I will give examples of ballots that can be parsed and accepted for each voting method. The specific workflow behind vote parsing is very complicated so I recommend checking out the isValid functions in xxxVoting.py to get an precise understanding of how I preprocess ballots. Don't worry, there are many comments! 
+
+The AddBallot function always accepts a pandas.Series as input, but many voting methods accepts more intuitive and more convinient input formats. The return value immediately reports whether this ballot is accepted. 
+```python
+def AddBallot(self, new_ballot):
+    """
+    Adds a ballot to the election if it is valid. 
     
-    def ImportBallots(self, filename):
-        """
-        Imports ballots from a file to the election. 
-        
-        Parameters
-        filename : str
-            name of the ballot file to be imported, possibly the full path
-        
-        Returns
-        int
-            number of valid ballots successfully added
-        """
+    Parameters
+    new_ballot
+        a representation of the ballot interpretable by this voting system
     
-    def ExportBallots(self, filename):
-        """
-        Exports all valid ballots in this election to a file. 
-        
-        Parameters
-        filename : str
-            name of the ballot file to be exported to, possibly the full path
-        
-        Returns
-        int
-            number of valid ballots successfully exported
-        """
-    
-    def RunElection(self, candidates=None):
-        """
-        Runs the election with the given candidates and get the results. 
-        
-        Parameters
-        candidates : list, default=None
-            a list of unique strings representing the candidates
-            if None, all candidates specified in constructor will be included
-        
-        Returns
-        list
-            a list of (candidate, rank, log) tuples representing the election
-            result, ordered by rank from first to last, possibly with ties
-            log is a list of (score, outcome) tuples each representing the 
-            candidate's result of a round of election in chronological order, 
-            where outcome can be "u", "l", or "t", representing the candidate
-            ended up in the upper bracket, lower bracket, or tied, respectively
-        """
-    
-    def SplitSize(self, num_candidates):
-        """
-        Calculates how many candidates will be placed in the upper bracket. 
-        Actual bracket sizes used may be different due to ties. 
-        
-        Parameters
-        num_candidates : int
-            total number of candidates to be splited
-        
-        Returns
-        int
-            number of candidates to be placed in the upper bracket
-        """
-    
-    def RunMultiWinnerElection(self, candidates=None):
-        """
-        Runs a multi winner election with the given candidates and get the 
-        results. 
-        
-        Parameters
-        candidates : list, default=None
-            a list of unique strings representing the candidates
-            if None, all candidates specified in constructor will be included
-        
-        Returns
-        list
-            a list of (candidate, rank, results) tuples representing the 
-            election result, ordered by rank from first to last, possibly 
-            with ties
-            results is a list in RunElection's return format, specifying the
-            full election result in which that candidate won, thereby securing
-            that rank in the list
-        """
+    Returns
+    bool
+        whether this ballot is valid and added successfully
+    """
 ```
 
-# Theoretical Motivations
+Aside from calling AddBallot repeatedly, you can also call ImportBallots to import all ballots in an excel spreadsheet to the election. You can call ImportBallots multiple times to import several files or even import the same file multiple times to add duplicated ballots! The ballots should be pandas.DataFrame, where each column is a candidate and each row a ballot. If you are unsure about the file format, I recommend initializing a dummy election, adding some ballots using AddBallot, then exporting them using ExportBallots as an example. 
 
-## Incentives for Elimination Process
+It is not guaranteed that all rows in the file are valid ballots. The return value is the number of valid ballots successfully added. 
+```python
+def ImportBallots(self, filename):
+    """
+    Imports ballots from an excel spreadsheet to the election. 
+    
+    Parameters
+    filename : str
+        name of the ballot file to be imported, possibly the full path
+    
+    Returns
+    int
+        number of valid ballots successfully added
+    """
+```
 
-(I don't know what to call this because "backward elimination" and "bottom elimination" are terms already used in other scenarios)
+When using ExportBallots, I strongly recommend exporting to a file with xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallot, even when try_handle_invalid is False. 
 
-Before I proceed to introduce all these voting methods, I will briefly explain why the common RunElection function in the Voting class runs the election by repeatedly eliminating the candidate with the worst score (the SplitSize function is tunable if you define your own voting method). In most election senarios, we care much more about the ranking of the top few candidates than the ranking of the bottom few. Thus, the ranking of the top few candidates needs to be determined with caution and voted with as little distraction as possible. Repeatedly eliminating the candidate at the bottom and does runoff on the rest can achieve this. 
+It is possible to import ballot files exported from a different voting method, but this must be done with caution. One thing to note is that RCV, TLV, and TPV treat smaller numbers as preferred by default, contrary to all other voting methods. 
+```python
+def ExportBallots(self, filename):
+    """
+    Exports all valid ballots in this election to an excel spreadsheet. 
+    
+    Parameters
+    filename : str
+        name of the ballot file to be exported to, possibly the full path
+    
+    Returns
+    int
+        number of valid ballots successfully exported
+    """
+```
 
-## How This Code Supports Proportional Representation With Multi-winner Election
+```python
+def RunElection(self, candidates=None):
+    """
+    Runs the election with the given candidates and get the results. 
+    
+    Parameters
+    candidates : list, default=None
+        a list of unique strings representing the candidates
+        if None, all candidates specified in constructor will be included
+    
+    Returns
+    list
+        a list of (candidate, rank, log) tuples representing the election
+        result, ordered by rank from first to last, possibly with ties
+        log is a list of (score, outcome) tuples each representing the 
+        candidate's result of a round of election in chronological order, 
+        where outcome can be "u", "l", or "t", representing the candidate
+        ended up in the upper bracket, lower bracket, or tied, respectively
+    """
+```
 
-...
 
 # Individual Voting Methods
 
