@@ -5,7 +5,7 @@ THIS README IS NOT FINISHED YET!
 # Project Overview
 This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. The code is available here: https://github.com/aceazycrdfz/pyvoting
 
-When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to STARVoting.py for its special log format). 
+When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to the STAR Voting section for its special log format). 
 
 My code also support both single-winner elections (RunElection) and multi-winner elections (RunMultiWinnerElection), which is great for proportional representation. Although their usage is very similar, there is a clear distinction and I will thoroughly explain how they work in the Theoretical Motivations section. 
 
@@ -83,7 +83,7 @@ def AddBallot(self, new_ballot):
     """
 ```
 
-Aside from calling AddBallot repeatedly, you can also call ImportBallots to import all ballots in an excel spreadsheet to the election. You can call ImportBallots multiple times to import several files or even import the same file multiple times to add duplicated ballots! The ballots should be pandas.DataFrame, where each column is a candidate and each row a ballot. If you are unsure about the file format, I recommend initializing a dummy election, adding some ballots using AddBallot, then exporting them using ExportBallots as an example. 
+Aside from calling AddBallot repeatedly, you can also call ImportBallots to import all ballots in an excel spreadsheet to the election. You can call ImportBallots multiple times to import several files or even import the same file multiple times to add duplicated ballots! The ballots should be a pandas.DataFrame, where each column is a candidate and each row a ballot. If you are unsure about the file format, I recommend initializing a dummy election, adding some ballots using AddBallot, then exporting them using ExportBallots as an example. 
 
 It is not guaranteed that all rows in the file are valid ballots. The return value is the number of valid ballots successfully added. 
 ```python
@@ -101,7 +101,7 @@ def ImportBallots(self, filename):
     """
 ```
 
-When using ExportBallots, I strongly recommend exporting to a file with xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallot, even when try_handle_invalid is False. 
+When using ExportBallots, I strongly recommend exporting to a file with .xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallot, even when try_handle_invalid is False. 
 
 It is possible to import ballot files exported from a different voting method, but this must be done with caution. One thing to note is that RCV, TLV, and TPV treat smaller numbers as preferred by default, contrary to all other voting methods. 
 ```python
@@ -118,6 +118,7 @@ def ExportBallots(self, filename):
         number of valid ballots successfully exported
     """
 ```
+
 
 ```python
 def RunElection(self, candidates=None):
@@ -140,6 +141,7 @@ def RunElection(self, candidates=None):
     """
 ```
 
+Here's a typical workflow using this package. This example uses plurality voting. 
 
 # Individual Voting Methods
 

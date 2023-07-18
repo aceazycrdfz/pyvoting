@@ -9,9 +9,9 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
 # you need to change all these
-VERSION = '1.0.0'
-DESCRIPTION = 'an election framework that simulates 9 voting methods, including 4 I have invented'
-LONG_DESCRIPTION = 'an election framework that simulates 9 voting methods, including 4 I have invented'
+VERSION = '1.0.2'
+DESCRIPTION = 'simulating elections with 9 choices of voting methods, including 4 I have invented'
+LONG_DESCRIPTION = 'simulating elections with 9 choices of voting methods, including 4 I have invented'
 
 setup(
     name="pyvoting",
@@ -24,7 +24,8 @@ setup(
     packages=find_packages(),
     install_requires=["pandas", "numpy"],
     keywords=["python", "vote", "voting", "election", "approval voting",
-              "star voting", "ranked choice voting", "rcv", "tier list"],
+              "star voting", "ranked choice voting", "rcv", "tier list", 
+              "tier list voting"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
