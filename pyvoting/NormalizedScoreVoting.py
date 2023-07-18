@@ -95,3 +95,5 @@ class NormalizedScoreVoting(Voting):
     def SplitSize(self, num_candidates):
         return super().SplitSize(num_candidates)
     
+    def RunMultiWinnerElection(self, candidates=None):
+        return super().RunElection(candidates)

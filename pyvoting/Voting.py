@@ -204,3 +204,33 @@ class Voting(ABC):
         """
         return num_candidates-1
     
+    def RunMultiWinnerElection(self, candidates=None):
+        """
+        Runs a multi winner election with the given candidates and get the 
+        results. 
+        
+        Parameters
+        candidates : list, default=None
+            a list of unique strings representing the candidates
+            if None, all candidates specified in constructor will be included
+        
+        Returns
+        list
+            a list of (candidate, rank, results) tuples representing the 
+            election result, ordered by rank from first to last, possibly 
+            with ties
+            results is a list in RunElection's return format, specifying the
+            full election result in which that candidate won, thereby securing
+            that rank in the list
+        """
+        if candidates==None:
+            candidates=self.candidates
+        results = []
+        while candidates!=[]:
+            res = self.RunElection(candidates)
+            # every candidate with rank 1 gets appended to the results list
+            results.extend([(c, len(results)+1, res) for (c, r, l) in res if
+                            r==1])
+            # exclude candidates that had won
+            candidates = [c for (c, r, l) in res if r>1]
+        return results
