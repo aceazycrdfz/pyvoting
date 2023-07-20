@@ -206,7 +206,7 @@ class Voting(ABC):
     
     def RunMultiWinnerElection(self, candidates=None):
         """
-        Runs a multi winner election with the given candidates and get the 
+        Runs a multi-winner election with the given candidates and get the 
         results. 
         
         Parameters

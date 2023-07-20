@@ -5,9 +5,9 @@ THIS README IS NOT FINISHED YET!
 # Project Overview
 This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. The code is available here: https://github.com/aceazycrdfz/pyvoting
 
-When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR Voting, please refer to the STAR Voting section for its special log format). 
+When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR voting, please refer to the STAR voting section for its special log format). 
 
-My code also support both single-winner elections (RunElection) and multi-winner elections (RunMultiWinnerElection), which is great for proportional representation. Although their usage is very similar, there is a clear distinction and I will thoroughly explain how they work in the Theoretical Motivations section. 
+My code also support both single-winner elections (RunElection) and multi-winner elections (RunMultiWinnerElection), which is great for proportional representation. Although their usage is very similar, there is a distinction and I will thoroughly explain how they work in the Theoretical Motivations section. 
 
 This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can even accept and interpret ballots that doesn't strictly follow the required format. There are many examples for acceptable ballot input when I later introduce the voting methods. 
 
@@ -19,11 +19,31 @@ The OOP nature of this code makes it very easy to develop new voting methods und
 
 (I don't know what to call this because "backward elimination" and "bottom elimination" are terms already used in other scenarios)
 
-Before I proceed to introduce all these voting methods, I will briefly explain why the common RunElection function in the Voting class runs the election by repeatedly eliminating the candidate with the worst score (the SplitSize function is tunable if you define your own voting method). In most election senarios, we care much more about the ranking of the top few candidates than the ranking of the bottom few. Thus, the ranking of the top few candidates needs to be determined with caution and voted with as little distraction as possible. Repeatedly eliminating the candidate at the bottom and does runoff on the rest can achieve this. 
+Before I proceed to introduce all these voting methods, I will briefly explain why the common RunElection function in the Voting class runs the election by repeatedly eliminating the candidate with the worst score (the SplitSize function is tunable if you define your own voting class). In most election senarios, we care much more about the ranking of the top few candidates than the ranking of the bottom few. Thus, the ranking of the top few candidates needs to be determined with caution and voted with as little distraction as possible. Repeatedly eliminating the candidate at the bottom and does runoff on the rest can achieve this. 
 
-## How This Code Supports Proportional Representation With Multi-winner Election
+The intended effect is that supporters of candidates that got eliminated early have a say in their preferences among the remaining candidates as much as everyone else. Ranked choice voting, tier list voting, tiered popularity voting, normalized score voting, and standardized score voting all have this effect (I invented the later 4 voting methods and they are all thoroughly explained in later sections). 
 
-...
+## How This Code Supports Proportional Representation With Multi-Winner Election
+
+The core RunElection Function orders the candidates by the reverse order of elimination. Therefore, the most straightforward and intuitive way of adapting to a multi-winner scenario is to pick the top few. However, this package uses a better approach: when calling RunMultiWinnerElection, it will repeatedly determine a winner to be at the top by calling RunElection. When a winner from RunElection is found, this candidate will be excluded and all the rest of the candidates will compete for the second place by calling RunElection again. This is done until all the candidates are excluded. Then, the top few returned by RunMultiWinnerElection should be viewed as the winners of the multi-winner election. 
+
+Intuitively the incentive for doing this is that for many voting methods, a vote's support for candidates are not totally independent: more support for one candidate is implicitly less support for others. This is problematic for multi-winner elections (not strategy-proof) because some voters might indicate less support for their favorite because that candidate is guaranteed to win and dedicate their ballot to support contenders for the remaining winning seats. In other words, voters are incentivized to give more support to a less perferred candidate just because they think their preferred candidates can easily win without their support. The mechanism in RunMultiWinnerElection that I described above can fix this issue. Whenever a winner is found, it gets excluded so its effect on voters' support for other candidates are removed. So big supporters of a guaranteed winner have a say in their preferences among the remaining candidates as much as everyone else. 
+
+In fact, the rankings produced by RunElection and RunMultiWinnerElection are always the same for most of the voting methods and are mostly the same for all of the voting methods. The later is always much less computationally efficient, especially when the number of candidates and ballots are large. So if a ranking of all candidates is all you need, I don't recommend using RunMultiWinnerElection. 
+
+## Spoiler Effect and Spoiler-Proofness
+
+Spoiler effect, or vote splitting, is a common phenomenon in plurality voting elections with more than 2 candidates. It happens when 2 candidates are too similar (they share many common supporters) so when their voters' votes was splitted among them, making them both worse off. 
+
+To formalize spoiler effect on the voting methods, I will define two properties: spoiler-proofness and semi-spoiler-proofness. A spoiler-proof voting method must satisfy the following property: for a arbitrary election, if an arbitrary candidate is duplicated an arbitrary times (by duplicate I mean all voters perfer them equally and ties are broken by coin-toss, if necessary), none of the duplicates is worse off (by "not worse off" I mean if that candidate used to beat another candidate, they still beat them with the existence of duplicates). A semi-spoiler-proof voting method must satisfy the following property: for a arbitrary election, if an arbitrary candidate is duplicated an arbitrary times, not all of the duplicates are worse off (in other words, the best duplicate is not worse off). 
+
+Voting methods that are spoiler-proof: approval voting, score voting, STAR voting, tier list voting, tiered popularity voting, normalized score voting
+
+Voting methods that are semi-spoiler-proof but not spoiler-proof: ranked choice voting, standardized score voting
+
+Voting methods that are neither: plurality voting
+
+When I introduce each voting method in later sections, I will justify their spoiler-proofness. 
 
 # Code Usage Overview
 
@@ -103,7 +123,7 @@ def ImportBallots(self, filename):
 
 When using ExportBallots, I strongly recommend exporting to a file with .xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallot, even when try_handle_invalid is False. 
 
-It is possible to import ballot files exported from a different voting method, but this must be done with caution. One thing to note is that RCV, TLV, and TPV treat smaller numbers as preferred by default, contrary to all other voting methods. 
+It is possible to import ballot files exported from a different voting method, but this must be done with caution. One thing to note is that RankedChoiceVoting, TierListVoting, and TieredPopularityVoting treat smaller numbers as preferred by default, contrary to all other voting methods. 
 ```python
 def ExportBallots(self, filename):
     """
@@ -119,6 +139,9 @@ def ExportBallots(self, filename):
     """
 ```
 
+The RunElection function is the core of this package. It simulates the whole election using all ballots and a specified subset of candidates. Behind the scene it has a recursive design that thoroughly breaks ties. You can easily construct a [preference matrix](https://www.starvoting.org/preference_matrix) by calling RunElection with each pair of candidates. 
+
+All voting methods except STAR voting uses the log format specified below (refer to the STAR voting section below for its log format). If you are still unsure about the log format, I recommend experimenting with some simple elections and some made-up ballots so that you can inspect the output of RunElection. 
 
 ```python
 def RunElection(self, candidates=None):
@@ -141,7 +164,62 @@ def RunElection(self, candidates=None):
     """
 ```
 
+The RunMultiWinnerElection is in fact very simple: it calls RunElection, put the winner(s) on the top of the result list, exclude the winner(s) then repeat until all candidates are placed. As previously explained, this is a more robust way of running a multi-winner election than picking the top few from RunElection because whenever a winner is selected, its effect on the placement of others is excluded. 
+
+```
+def RunMultiWinnerElection(self, candidates=None):
+    """
+    Runs a multi-winner election with the given candidates and get the 
+    results. 
+    
+    Parameters
+    candidates : list, default=None
+        a list of unique strings representing the candidates
+        if None, all candidates specified in constructor will be included
+    
+    Returns
+    list
+        a list of (candidate, rank, results) tuples representing the 
+        election result, ordered by rank from first to last, possibly 
+        with ties
+        results is a list in RunElection's return format, specifying the
+        full election result in which that candidate won, thereby securing
+        that rank in the list
+    """
+```
+
 Here's a typical workflow using this package. This example uses plurality voting. 
+
+```
+import pyvoting
+import pandas as pd
+
+# initialize an election with 3 candidates
+election = pyvoting.PluralityVoting(["cand1","cand2","cand3])
+
+# import ballots from a file
+election.ImportBallots("ballot_in.xlsx")
+
+# manually add some ballots
+election.AddBallot(pd.Series({"cand1":1,
+                              "cand2":0,
+                              "cand3":0}))
+election.AddBallot(pd.Series({"cand1":1,
+                              "cand2":0,
+                              "cand3":0}))
+election.AddBallot(pd.Series({"cand1":0,
+                              "cand2":1,
+                              "cand3":0}))
+
+# save all ballots for future use
+election.ExportBallots("ballot_out.xlsx")
+
+# run the election and get the result
+result = election.RunElection()
+
+# do something with the result...
+```
+
 
 # Individual Voting Methods
 
