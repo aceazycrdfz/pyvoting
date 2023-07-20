@@ -43,8 +43,6 @@ Voting methods that are semi-spoiler-proof but not spoiler-proof: ranked choice 
 
 Voting methods that are neither: plurality voting
 
-When I introduce each voting method in later sections, I will justify their spoiler-proofness. 
-
 # Code Usage Overview
 
 To install this package, run this in your command prompt:
@@ -121,7 +119,7 @@ def ImportBallots(self, filename):
     """
 ```
 
-When using ExportBallots, I strongly recommend exporting to a file with .xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallot, even when try_handle_invalid is False. 
+When using ExportBallots, I strongly recommend exporting to a file with .xlsx extension. All ballots exported are valid and preprocessed, meaning that they might look different from how they were added/imported. All ballots exported without modification are guaranteed to be valid when they are imported with ImportBallots, even when try_handle_invalid is False. 
 
 It is possible to import ballot files exported from a different voting method, but this must be done with caution. One thing to note is that RankedChoiceVoting, TierListVoting, and TieredPopularityVoting treat smaller numbers as preferred by default, contrary to all other voting methods. 
 ```python
@@ -195,7 +193,7 @@ import pyvoting
 import pandas as pd
 
 # initialize an election with 3 candidates
-election = pyvoting.PluralityVoting(["cand1","cand2","cand3])
+election = pyvoting.PluralityVoting(["cand1", "cand2", "cand3])
 
 # import ballots from a file
 election.ImportBallots("ballot_in.xlsx")
@@ -231,13 +229,73 @@ However, when there exists more than 2 candidates, the winner in plurality votin
 
 In my code, the common framework of repeatedly eliminating the bottom candidate is used. But for plurality voting the score for each candidate remains the same across rounds. Therefore, the score in the first entry of the log is the vote earned by that candidate. This is also true for Approval Voting and Score Voting. 
 
+Spoiler-proofness: NO
+Semi-spoiler-proofness: NO
+
+The PluralityVoting class accepts both a pandas.Series or just a string of the preferred ballot as the one to vote for. 
+
+```python
+import pyvoting
+import pandas as pd
+election = pyvoting.PluralityVoting(["cand1", "cand2", "cand3"])
+# these are acceptable ballots for cand1
+election.AddBallot("cand1")
+election.AddBallot(pd.Series({"cand1":1,
+                              "cand2":0,
+                              "cand3":0}))
+election.AddBallot(pd.Series({"cand3":0,
+                              "cand2":0,
+                              "cand1":1}))
+# these are acceptable ballots for cand1 only when try_handle_invalid 
+# is True
+election.AddBallot(pd.Series({"cand1":1})
+election.AddBallot(pd.Series({"cand1":100.1,
+                              "cand2":2.33}))
+election.AddBallot(pd.Series({"cand2":-2,
+                              "cand3":-5}))
+```
+
+Moreover, PluralityVoting supports exporting ballots in sparse representation: only one column for each ballot recording the candidate string to vote for. You can do this by setting the parameter simple to True when calling ExportBallots. 
+
+```python
+election.ExportBallots("ballot_out.xlsx", simple=True)
+```
+
+ImportBallots can accept ballot files in either format. It will automatically detect the file format. 
+
+
 ## Approval Voting
 
-Approval voting would've been self-explanatory had it be named multiple-choice voting. It differs from plurality voting only in that one can vote for (approve) as many candidates as possible and still the winner is the one with the most votes (approval). This simple change fixed the main problem of plurality voting: support for the candidates are no longer exclusive. Voting for unpopular candidates does not affect one's opinion on the popular candidates. Therefore, there will be no reason one would ever vote for a less preferred candidate over a perferred one. 
-
-Approval voting still needs the voters to determine the "approving cutoff" in their mind. This process could be a bit strategic but not in a way that makes one lie about their true preferences. 
+Approval voting would've been self-explanatory had it be named multiple-choice voting. It differs from plurality voting only in that one can vote for (approve) as many candidates as possible and still the winner is the one with the most votes (approval). This simple change fixed the main problem of plurality voting: support for the candidates are no longer exclusive. Voting for unpopular candidates does not affect one's opinion on the popular candidates. Therefore, there will be no reason one would ever vote for a less preferred candidate over a perferred one. Approval voting still needs the voters to determine the "approving cutoff" in their mind. This process could be a bit strategic but not in a way that makes one lie about their true preferences. 
 
 Overall, approval voting is the simplest and the most efficient among alternative voting methods. 
+
+Spoiler-proofness: YES
+Semi-spoiler-proofness: YES
+
+The ApprovalVoting class also supports just a string as a vote. Additionally, it supports a list of strings of candidates to vote for as a ballot. It even accepts an empty list representing voting no one, which PluralityVoting does not. 
+
+```python
+import pyvoting
+import pandas as pd
+election = pyvoting.ApprovalVoting(["cand1", "cand2", "cand3"])
+# these are acceptable ballots for cand1
+election.AddBallot("cand1")
+election.AddBallot(["cand1"])
+# these are acceptable ballots for cand1 and cand2
+election.AddBallot(["cand1", "cand2"])
+election.AddBallot(pd.Series({"cand1":1,
+                              "cand2":1,
+                              "cand3":0}))
+# these are acceptable ballots for cand1 and cand2 only when 
+# try_handle_invalid is True
+election.AddBallot(pd.Series({"cand1":1,
+                              "cand2":1}))
+election.AddBallot(pd.Series({"cand1":20,
+                              "cand2":20,
+                              "cand3":3}))
+```
+
 
 ## Score Voting
 
@@ -245,7 +303,40 @@ What if instead of full approval and not approval one can express something in b
 
 Voters are not always incentivized to report their true payoffs in score voting. This is not incentive compatible and a counter-example can be easily made. Nonetheless, just like in approval voting, one is never incentivized to give a lower score to a perferred candidate and give a higher score for a less preferred one. 
 
+Spoiler-proofness: YES
+Semi-spoiler-proofness: YES
+
 When using my code, you can specify the acceptable range and whether only integers are allowed. If specified, my code can also help fixing invalid ballots by putting out-of-bound scores back in and round non-integers if necessary. STAR Voting, Normalized Score Voting, and Standardized Score Voting also support these feasures. 
+
+```python
+def __init__(self, candidates, try_handle_invalid=True, score_range=(0, 5), 
+             only_int=True):
+    super().__init__(candidates, try_handle_invalid)
+    """
+    New Parameters
+    score_range : tuple, default=(0, 5)
+        an integer tuple representing the lower bound and the upper bound 
+        of the scores, both inclusive
+    only_int : bool, default=True
+        whether only integer scores is allowed
+    """
+```
+
+```python
+import pyvoting
+import pandas as pd
+election = pyvoting.ScoreVoting(["cand1", "cand2", "cand3"],
+                                score_range=(0, 5), only_int=True)
+election.AddBallot(pd.Series({"cand1":0,
+                              "cand2":2,
+                              "cand3":5}))
+# if try_handle_invalid is True, the following is another way of adding 
+# a ballot that is exactly the same as above
+election.AddBallot(pd.Series({"cand1":-1,
+                              "cand2":1.8,
+                              "cand3":7}))
+```
+
 
 ## STAR Voting
 
@@ -253,26 +344,49 @@ STAR stands for "Score then Automatic Runoff". It is very similar to score votin
 
 STAR voting's tie-breaking is difficult in that there are multiple scenarios for ties, although they are rare. The STAR Voting organization listed 2 [official tie-breaking protocals](https://www.starvoting.org/ties), but they are unnatural and hard to implement. In my code I implemented my own tie-breaking method. In the scoring round, all candidates who has strictly less than 2 other candidates with better scores are qualified in the runoff round. So although there are at least 2 qualifiers, there might be more due to ties in scores. Then the runoff round is like approval voting: among all quanlified candidates, each ballot votes for the candidate(s) assigned with the highest score. Ties in the runoff round is broken by the scoring round score. This tie-breaking rule is easy to understand and implement. (In fact, due to the possibllity of ties, STARVoting is the only voting class that implemented its own RunElection function)
 
-advantages
+STAR voting and ranked choice voting often compete for the best and most popular alternative voting method. While STAR voting almost always produces the same winner as ranked choice voting (as well as the 4 voting methods I have invented), it is significantly faster to run and simpler to explain. It also support giving tied scores while the vanilla RCV cannot. When the number of candidates is large, RCV's ballot size rises quadratically while STAR voting's ballot size rises linearly (if RCV restricts the number of candidates to rank, it will lose its strategy-proofness and semi-spoiler-proofness!). Therefore, STAR voting is a great tradeoff between rule complexity and top-candidate runoffs. 
+
+Spoiler-proofness: YES
+Semi-spoiler-proofness: YES
+
+Just like ScoreVoting, STARVoting's constructor takes in two additional optional parameters: score_range and Only_int. Adding ballots for STARVoting is also exactly the same as ScoreVoting. Please refer to the examples at the end of the ScoreVoting section. 
+
+The RunElection function of STARVoting has a special log format. Naturally, this also affects the result of RunMultiWinnerElection. 
+
+```python
+def RunElection(self, candidates=None):
+    """
+    This STAR voting implementation uses a different tie-breaking protocal 
+    that makes more sense and is easier to implement than the typical STAR 
+    voting tie-breaking methods!
+    
+    The log in the returned list has a different format: a numeric tuple 
+    (s1, s2) where s1 is the scoring round score and s2 is the runoff 
+    round score. Those who did not make it to runoff has a runoff score 0. 
+    """
+```
+
 
 ## Ranked Choice Voting
 
 ...
 
-## Tier List Voting
+## Tier List Voting (original)
+
+(other possible names include ranked choie approval voting, flexible ranked choice voting...)
 
 ...
 
-## Tiered Popularity Voting
+## Tiered Popularity Voting (original)
 
 ...
 
-## Normalized Score Voting
+## Normalized Score Voting (original)
 
 
 although the support for candidates seems to be in conflict, whenever a candidate is eliminated, its effect on other's scores is gone
 
-## Standardized Score Voting
+## Standardized Score Voting (original)
 
 ...
 
