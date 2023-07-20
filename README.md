@@ -166,7 +166,7 @@ def RunElection(self, candidates=None):
 
 The RunMultiWinnerElection is in fact very simple: it calls RunElection, put the winner(s) on the top of the result list, exclude the winner(s) then repeat until all candidates are placed. As previously explained, this is a more robust way of running a multi-winner election than picking the top few from RunElection because whenever a winner is selected, its effect on the placement of others is excluded. 
 
-```
+```python
 def RunMultiWinnerElection(self, candidates=None):
     """
     Runs a multi-winner election with the given candidates and get the 
@@ -190,7 +190,7 @@ def RunMultiWinnerElection(self, candidates=None):
 
 Here's a typical workflow using this package. This example uses plurality voting. 
 
-```
+```python
 import pyvoting
 import pandas as pd
 
