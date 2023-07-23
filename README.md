@@ -29,13 +29,15 @@ The core RunElection Function orders the candidates by the reverse order of elim
 
 Intuitively the incentive for doing this is that for many voting methods, a vote's support for candidates are not totally independent: more support for one candidate is implicitly less support for others. This is problematic for multi-winner elections (not strategy-proof) because some voters might indicate less support for their favorite because that candidate is guaranteed to win and dedicate their ballot to support contenders for the remaining winning seats. In other words, voters are incentivized to give more support to a less perferred candidate just because they think their preferred candidates can easily win without their support. The mechanism in RunMultiWinnerElection that I described above can fix this issue. Whenever a winner is found, it gets excluded so its effect on voters' support for other candidates are removed. So big supporters of a guaranteed winner have a say in their preferences among the remaining candidates as much as everyone else. 
 
-In fact, the rankings produced by RunElection and RunMultiWinnerElection are always the same for most of the voting methods and are mostly the same for all of the voting methods. The later is always much less computationally efficient, especially when the number of candidates and ballots are large. So if a ranking of all candidates is all you need, I don't recommend using RunMultiWinnerElection. 
+For plurality voting, approval voting, and score voting, a ballot's score to each candidate is fixed and not affected by the set of candidates in the race. So calling the mechanism in RunMultiWinnerElection cannot help them achieve a desirable multi-winner election. In fact, the rankings produced by RunElection and RunMultiWinnerElection are always the same for most of the voting methods and are mostly the same for all of the voting methods. The later is always much less computationally efficient, especially when the number of candidates and ballots are large. So if a ranking of all candidates is all you need, I don't recommend using RunMultiWinnerElection. 
 
 ## Spoiler Effect and Spoiler-Proofness
 
 Spoiler effect, or vote splitting, is a common phenomenon in plurality voting elections with more than 2 candidates. It happens when 2 candidates are too similar (they share many common supporters) so when their voters' votes was splitted among them, making them both worse off. 
 
 To formalize spoiler effect on the voting methods, I will define two properties: spoiler-proofness and semi-spoiler-proofness. A spoiler-proof voting method must satisfy the following property: for a arbitrary election, if an arbitrary candidate is duplicated an arbitrary times (by duplicate I mean all voters perfer them equally and ties are broken by coin-toss, if necessary), none of the duplicates is worse off (by "not worse off" I mean if that candidate used to beat another candidate, they still beat them with the existence of duplicates). A semi-spoiler-proof voting method must satisfy the following property: for a arbitrary election, if an arbitrary candidate is duplicated an arbitrary times, not all of the duplicates are worse off (in other words, the best duplicate is not worse off). 
+
+In the discussion of semi-spoiler-proofness I will assume there are no ties, otherwise under my tie-breaking method, there would be a very small chance ranked choice voting and standardized score voting eliminate all duplicates early. To eradicate this small chance, tie-breaking must involve randomness, which I dislike more for a serious election. 
 
 Voting methods that are spoiler-proof: approval voting, score voting, STAR voting, tier list voting, tiered popularity voting, normalized score voting
 
@@ -230,6 +232,7 @@ However, when there exists more than 2 candidates, the winner in plurality votin
 In my code, the common framework of repeatedly eliminating the bottom candidate is used. But for plurality voting the score for each candidate remains the same across rounds. Therefore, the score in the first entry of the log is the vote earned by that candidate. This is also true for Approval Voting and Score Voting. 
 
 Spoiler-proofness: NO
+
 Semi-spoiler-proofness: NO
 
 The PluralityVoting class accepts both a pandas.Series or just a string of the preferred ballot as the one to vote for. 
@@ -271,6 +274,7 @@ Approval voting would've been self-explanatory had it be named multiple-choice v
 Overall, approval voting is the simplest and the most efficient among alternative voting methods. 
 
 Spoiler-proofness: YES
+
 Semi-spoiler-proofness: YES
 
 The ApprovalVoting class also supports just a string as a vote. Additionally, it supports a list of strings of candidates to vote for as a ballot. It even accepts an empty list representing voting no one, which PluralityVoting does not. 
@@ -304,6 +308,7 @@ What if instead of full approval and not approval one can express something in b
 Voters are not always incentivized to report their true payoffs in score voting. This is not incentive compatible and a counter-example can be easily made. Nonetheless, just like in approval voting, one is never incentivized to give a lower score to a perferred candidate and give a higher score for a less preferred one. 
 
 Spoiler-proofness: YES
+
 Semi-spoiler-proofness: YES
 
 When using my code, you can specify the acceptable range and whether only integers are allowed. If specified, my code can also help fixing invalid ballots by putting out-of-bound scores back in and round non-integers if necessary. STAR Voting, Normalized Score Voting, and Standardized Score Voting also support these feasures. 
@@ -347,6 +352,7 @@ STAR voting's tie-breaking is difficult in that there are multiple scenarios for
 STAR voting and ranked choice voting often compete for the best and most popular alternative voting method. While STAR voting almost always produces the same winner as ranked choice voting (as well as the 4 voting methods I have invented), it is significantly faster to run and simpler to explain. It also support giving tied scores while the vanilla RCV cannot. When the number of candidates is large, RCV's ballot size rises quadratically while STAR voting's ballot size rises linearly (if RCV restricts the number of candidates to rank, it will lose its strategy-proofness and semi-spoiler-proofness!). Therefore, STAR voting is a great tradeoff between rule complexity and top-candidate runoffs. 
 
 Spoiler-proofness: YES
+
 Semi-spoiler-proofness: YES
 
 Just like ScoreVoting, STARVoting's constructor takes in two additional optional parameters: score_range and Only_int. Adding ballots for STARVoting is also exactly the same as ScoreVoting. Please refer to the examples at the end of the ScoreVoting section. 
@@ -369,13 +375,42 @@ def RunElection(self, candidates=None):
 
 ## Ranked Choice Voting
 
+Ranked choice voting (RCV) is my favorite among these alternative voting methods I have introduced so far. Nonetheless, I also consider RCV to have the most number of disadvantages! Later in this section I'll explain RCV's pros and cons, and in the next section I'll explain how tier list voting, which I invented, fixed all the cons. 
+
+In a vanilla RCV, each voter ranks all candidates from the favorite the least favorite. When presented with any subset of candidates, the ballot is treated as a vote for the most preferred candidate in the subset. An RCV election is an elimination process like I explained in the Incentives for Elimination Process section: at first all candidates are included and all ballots vote on them. The candidate(s) with the least score is eliminated (if more than one, will eliminate them all and recursively tie-break on them, refer to my code), and all ballots vote again on the survivors. This is repeated until one candidate is left (equivalently, until one candidate wins more than half vote) and this candidate wins. Because this ranked list ballot automatically votes multiples times, RCV is also called instant runoff voting (IRV). 
+
+(I know I know, no one else introduces RCV like how I just did. But this interpretation fits well with the core idea of this package that ballots are functions that evaluates candidates within any subset of candidates. Once this idea is internalized, it would be very easy to understand the 4 voting methods that I invented.)
+
+RCV can be flexible: a vote can choose to (or be restricted to) only rank a few candidates on their ballot (my code supports both). If all candidates on the ballot are eliminated, this ballot then votes no one. It is easy to see that if we restrict the voters to only rank 1 candidate, this is exactly plurality voting. 
+
+RCV is amazing in that as long as a ballot ranks all candidates, it always votes someone, even after candidates are already eliminated, dropped out, or victorious (for multi-winner elections). In other words, there is never a wasted vote! It is easily provable that as long as a voter is allowed to rank every candidate, there is never incentive to rank a preferred candidate after a less preferred one, so RCV is strategy-proof! It can also easily adapt to multi-winner election using my RunMultiWinnerElection implementation or a more commonly known proportional RCV. 
+
+Unfortunately, RCV has many practical problems. To get a feeling of this, open up the menu of the nearest restaurant and rank all dishes on a paper ballot. The first inconvenience you'll notice is that the ballot size has to be huge. For an optical scannable (machine-readable) RCV ballot in an election of 20 candidates, there needs to be 400 slots! The ballot size rises quadratically ($O(N^2)$ complexity!). If you instead let voters number the candidates, like the Australians do, ballots would have to be processed by human labo(u)r, making an already unbelievably slow RCV election worse. Alternatively, you can restrict the number of candidates each voter can rank, but doing so breaks the very properties all alternative voting methods aims to achieve: strategy-proofness and semi-spoiler-proofness. Just like in plurality voting, if a voter thinks their top few candidates are hopeless, they might choose to not put them on the ballot and instead indicate their preferences on the popular but not favorite candidates. As I mentioned, a plurality voting is just an RCV where each voter can only rank one candidate. 
+
+A typical voter, whether ranking political candidates or dishes, will have a few candidate they really like, one or two they really hate, and many more they don't care or know enough about. Unlike STAR voting and the 4 voting methods I invented, RCV cannot support giving ties, so the voter must decide how to tie-break between candidates they know little about, if they want to put some candidates at the bottom of the list. I doubt anyone can easily tie-break a menu of dishes they neither love nor hate. 
+
+There is another inconvinience for the voters: before filling the ballot, voters must have the complete list in mind. Otherwise, if the voter wants to insert a candidate at a position in the list, they must revise the rank of many candidate already placed (which is the very reason insertion sort is $O(N^2)$). For physical ballots, this can be fixed by providing cards at the voting station to assist the voters. For users of my package, 
+my code can perform discretization, parsing the x-th smallest score as the x-th rank, if try_handle_invalid is True. In this way, inserting between two ranks is very easy:to intert between rank 5 and rank 6 you can write 5.5 without changing anything else. 
+
+RCV is actually not spoiler-proof: it is only semi-spoiler-proof. This is because a large number of duplicates will split the ballots placing that candidate on top, thus leading to many duplicates getting eliminated early. It is still semi-spoiler-proof because as the duplicates get eliminated, ballot placing them on top will converge to a few and eventually one duplicate (unless they are very unluckily tied and eliminated together). This duplicate will not worse-off, comparing to the alternative without the duplicates. 
+
+Spoiler-proofness: NO
+
+Semi-spoiler-proofness: YES
+
 ...
+use my code
+
+if rank # already restricted on input, no need to tell my package to do that as well. 
+
 
 ## Tier List Voting (original)
 
-(other possible names include ranked choie approval voting, flexible ranked choice voting...)
+(other possible names include ranked choie approval voting, flexible ranked choice voting, ...)
 
 ...
+
+only this recommend of practical political purpose
 
 ## Tiered Popularity Voting (original)
 
