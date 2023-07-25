@@ -23,6 +23,8 @@ Before I proceed to introduce all these voting methods, I will briefly explain w
 
 The intended effect is that supporters of candidates that got eliminated early have a say in their preferences among the remaining candidates as much as everyone else. Ranked choice voting, tier list voting, tiered popularity voting, normalized score voting, and standardized score voting all have this effect (I invented the later 4 voting methods and they are all thoroughly explained in later sections). 
 
+If you write your own xxxVoting class that inherits the Voting class, you can overwrite the SplitSize function. If your voting methods is also for scenarios that care more about rankings at the top than at the bottom, I recommend not modifying SplitSize. 
+
 ## How This Code Supports Proportional Representation With Multi-Winner Election
 
 The core RunElection Function orders the candidates by the reverse order of elimination. Therefore, the most straightforward and intuitive way of adapting to a multi-winner scenario is to pick the top few. However, this package uses a better approach: when calling RunMultiWinnerElection, it will repeatedly determine a winner to be at the top by calling RunElection. When a winner from RunElection is found, this candidate will be excluded and all the rest of the candidates will compete for the second place by calling RunElection again. This is done until all the candidates are excluded. Then, the top few returned by RunMultiWinnerElection should be viewed as the winners of the multi-winner election. 
@@ -398,29 +400,74 @@ Spoiler-proofness: NO
 
 Semi-spoiler-proofness: YES
 
+RCV's constructor support these 2 new parameters: 
 
+```python
+def __init__(self, candidates, try_handle_invalid=True, reverse=False, 
+             allowed_rank=0):
+    super().__init__(candidates, try_handle_invalid)
+    """
+    New Parameters
+    reverse : bool, default=False
+        default is #1 is the most preferred and #2 the second, etc...
+        if set to True, larger numbers are more preferred instead
+    allowed_rank : int, default=0
+        each ballot can only list the top allowed_rank favorite candidates
+        if set to 0, there is no limit on it
+    """
+```
 
+These 3 voting methods are special in that they treat smaller number as preferred by default (smaller rank = better), contrary to others. By setting reverse to False you can flip it and let larger numbers be preferred instead. This is useful when you want to import ballot files exported by other voting methods. However, no matter the value of reverse, ballots exported from these 3 voting methods are representing preferred candidates with smaller values. Additionally, if reverse is True, then when AddBallot recieves a list it will interpret larger, not smaller, indexes as preferred. Regardless, AddBallot treats candidates missing from the input list as equally disliked the most. 
 
+allowed_rank is the number of candidates each ballot is allowed to rank. The candidates not listed are by default equally disliked the most, so intuitively a ballot can put the candidates in at most allowed_rank+1 tiers. RCV does not allow tied ranks unless they are tied at the bottom. If try_handle_invalid is True and ballot ranked too many candidates, only the top allowed_rank are accepted. Practically speaking, there is no need to set allowed_rank at all if your ballot source (a paper ballot, a google sheet, ...) already restricted the number of ranks. When ballots come from multiple sources and only some are restricting the number of ranks, setting allowed_rank for all ballots makes it fair. 
 
-if rank # already restricted on input, no need to tell my package to do that as well. only useful when onyl some ballots are restricted
+I especially recommend setting try_handle_invalid to True when using RCV. The following are all possible ways to add a ballot:
+
+```python
+import pyvoting
+import pandas as pd
+election = pyvoting.RankedChoiceVoting(["cand1", "cand2", "cand3"])
+# these are all acceptable ballots and will be treated the same
+print(election.AddBallot(["cand1", "cand2", "cand3"]))
+print(election.AddBallot(["cand1", "cand2"]))
+print(election.AddBallot(pd.Series({"cand1":1,
+                                    "cand2":2,
+                                    "cand3":3})))
+print(election.AddBallot(pd.Series({"cand1":4,
+                                    "cand2":6,
+                                    "cand3":9})))
+print(election.AddBallot(pd.Series({"cand1":4,
+                                    "cand2":6})))
+```
 
 
 ## Tier List Voting (original)
 
-(other possible names include ranked choie approval voting, flexible ranked choice voting, ...)
+(other possible names include ranked choice approval voting, flexible ranked choice voting, ...)
 
-...
+In the last section I thoroughly explained the flaws of RCV. In order to fix them I invented tier list voting (TLV). Despite being similar to RCV, it fixed all its problems. TLV is perfect for many decision-making scenarios, especially political elections. The other 3 original voting methods are not suitable for political purposes. 
 
-only this recommend of practical political purpose
+Just like the name indicates, in TLV each voter will give a tier list to all candidates. Ideally voters can give as many tiers as possible (possibly one tier for each candidate!), but there could be practical limitations like the ballot size. When presented with any subset of candidates, the ballot votes for the highest tier that contains a presented candidate (since a ballot might vote arbitrarily many candidates per round, TLV can also be called ranked choice approval voting). And just like RCV, the overall format is repeatedly eliminating candidate at the bottom until there's a winner. In other words, the first round is like an approval voting for everyone's top tier. Then as candidates are eliminated, ballots might vote for lower tiers instead. 
+
+Ballot size is no longer a concern for TLV: to prevent the number of slots from growing quadratically, one can limit the number of tiers a voter can give, which barely affects the voter's ability to . 
+
+
 
 ## Tiered Popularity Voting (original)
 
-...
+补番目录
+
+my anime list
+
 
 ## Normalized Score Voting (original)
 
 
 although the support for candidates seems to be in conflict, whenever a candidate is eliminated, its effect on other's scores is gone
+
+computationally expensive, only practical when run by a computer
+
+rounding errors
 
 ## Standardized Score Voting (original)
 

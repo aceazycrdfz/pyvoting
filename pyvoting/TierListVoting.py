@@ -66,7 +66,7 @@ class TierListVoting(Voting):
         New Parameters
         reverse : bool, default=False
             default is #1 is the most preferred and #2 the second, etc...
-            if set to True, bigger numbers are more preferred instead
+            if set to True, larger numbers are more preferred instead
         allowed_tier : int, default=0
             the number of tiers each ballot is allowed to list, excluding a 
             default tier at the bottom

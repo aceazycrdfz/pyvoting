@@ -63,7 +63,7 @@ class RankedChoiceVoting(Voting):
         New Parameters
         reverse : bool, default=False
             default is #1 is the most preferred and #2 the second, etc...
-            if set to True, bigger numbers are more preferred instead
+            if set to True, larger numbers are more preferred instead
         allowed_rank : int, default=0
             each ballot can only list the top allowed_rank favorite candidates
             if set to 0, there is no limit on it
