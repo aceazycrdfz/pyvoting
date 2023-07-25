@@ -392,16 +392,17 @@ A typical voter, whether ranking political candidates or dishes, will have a few
 There is another inconvinience for the voters: before filling the ballot, voters must have the complete list in mind. Otherwise, if the voter wants to insert a candidate at a position in the list, they must revise the rank of many candidate already placed (which is the very reason insertion sort is $O(N^2)$). For physical ballots, this can be fixed by providing cards at the voting station to assist the voters. For users of my package, 
 my code can perform discretization, parsing the x-th smallest score as the x-th rank, if try_handle_invalid is True. In this way, inserting between two ranks is very easy:to intert between rank 5 and rank 6 you can write 5.5 without changing anything else. 
 
-RCV is actually not spoiler-proof: it is only semi-spoiler-proof. This is because a large number of duplicates will split the ballots placing that candidate on top, thus leading to many duplicates getting eliminated early. It is still semi-spoiler-proof because as the duplicates get eliminated, ballot placing them on top will converge to a few and eventually one duplicate (unless they are very unluckily tied and eliminated together). This duplicate will not worse-off, comparing to the alternative without the duplicates. 
+RCV is actually not spoiler-proof: it is only semi-spoiler-proof. This is because a large number of duplicates will split the ballots placing that candidate on top, thus leading to many duplicates getting eliminated early. It is still semi-spoiler-proof because as the duplicates get eliminated, ballot placing them on top will converge to a few and eventually one duplicate (unless they are very unluckily tied and eliminated together). This duplicate will not be worse-off, comparing to the alternative without the duplicates. 
 
 Spoiler-proofness: NO
 
 Semi-spoiler-proofness: YES
 
-...
-use my code
 
-if rank # already restricted on input, no need to tell my package to do that as well. 
+
+
+
+if rank # already restricted on input, no need to tell my package to do that as well. only useful when onyl some ballots are restricted
 
 
 ## Tier List Voting (original)
