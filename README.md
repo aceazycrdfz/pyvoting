@@ -1,8 +1,4 @@
-# UNDER CONSTRUCTION
-
-THIS README IS NOT FINISHED YET!
-
-# Project Overview
+# 1. Project Overview
 This is an election framework in python that simulates 9 voting methods, including 4 I have invented! In this README document I will explain what all these voting methods are, their recommended practical usage, and how to use my code. The code is available here: https://github.com/aceazycrdfz/pyvoting
 
 When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR voting, please refer to the STAR voting section for its special log format). 
@@ -13,9 +9,9 @@ This code is very robust and versatile. It ranks all candidates and performs tie
 
 The OOP nature of this code makes it very easy to develop new voting methods under my framework! All xxxVoting classes inherit the Voting class where the core RunElection function was already inplemented. You can easily design your own voting method by mimicking my implementations of these xxxVoting.py. There are very detailed comments explaining every step in the code. Essentialy, all you need to do is to redefine the Vote function of the your Ballot class. 
 
-# Theoretical Motivations
+# 2. Theoretical Motivations
 
-## Incentives for Elimination Process
+## 2.1 Incentives for Elimination Process
 
 (I don't know what to call this because "backward elimination" and "bottom elimination" are terms already used in other scenarios)
 
@@ -25,7 +21,7 @@ The intended effect is that supporters of candidates that got eliminated early h
 
 If you write your own xxxVoting class that inherits the Voting class, you can overwrite the SplitSize function. If your voting methods is also for scenarios that care more about rankings at the top than at the bottom, I recommend not modifying SplitSize. 
 
-## How This Code Supports Proportional Representation With Multi-Winner Election
+## 2.2 How This Code Supports Proportional Representation With Multi-Winner Election
 
 The core RunElection Function orders the candidates by the reverse order of elimination. Therefore, the most straightforward and intuitive way of adapting to a multi-winner scenario is to pick the top few. However, this package uses a better approach: when calling RunMultiWinnerElection, it will repeatedly determine a winner to be at the top by calling RunElection. When a winner from RunElection is found, this candidate will be excluded and all the rest of the candidates will compete for the second place by calling RunElection again. This is done until all the candidates are excluded. Then, the top few returned by RunMultiWinnerElection should be viewed as the winners of the multi-winner election. 
 
@@ -33,7 +29,7 @@ Intuitively the incentive for doing this is that for many voting methods, a vote
 
 For plurality voting, approval voting, and score voting, a ballot's score to each candidate is fixed and not affected by the set of candidates in the race. So calling the mechanism in RunMultiWinnerElection cannot help them achieve a desirable multi-winner election. In fact, the rankings produced by RunElection and RunMultiWinnerElection are always the same for most of the voting methods and are mostly the same for all of the voting methods. The later is always much less computationally efficient, especially when the number of candidates and ballots are large. So if a ranking of all candidates is all you need, I don't recommend using RunMultiWinnerElection. 
 
-## Spoiler Effect and Spoiler-Proofness
+## 2.3 Spoiler Effect and Spoiler-Proofness
 
 Spoiler effect, or vote splitting, is a common phenomenon in plurality voting elections with more than 2 candidates. It happens when 2 candidates are too similar (they share many common supporters) so when their voters' votes was splitted among them, making them both worse off. 
 
@@ -47,7 +43,7 @@ Voting methods that are semi-spoiler-proof but not spoiler-proof: ranked choice 
 
 Voting methods that are neither: plurality voting
 
-# Code Usage Overview
+# 3. Code Usage Overview
 
 To install this package, run this in your command prompt:
 ```shell
@@ -223,9 +219,9 @@ result = election.RunElection()
 ```
 
 
-# Individual Voting Methods
+# 4. Individual Voting Methods
 
-## Plurality Voting
+## 4.1 Plurality Voting
 
 Plurality voting is the simplest and most common voting method: each voter votes for one candidate and the candidate with the most vote wins. It beats every other methods in simplicity and efficiency. 
 
@@ -269,7 +265,7 @@ election.ExportBallots("ballot_out.xlsx", simple=True)
 ImportBallots can accept ballot files in either format. It will automatically detect the file format. 
 
 
-## Approval Voting
+## 4.2 Approval Voting
 
 Approval voting would've been self-explanatory had it be named multiple-choice voting. It differs from plurality voting only in that one can vote for (approve) as many candidates as possible and still the winner is the one with the most votes (approval). This simple change fixed the main problem of plurality voting: support for the candidates are no longer exclusive. Voting for unpopular candidates does not affect one's opinion on the popular candidates. Therefore, there will be no reason one would ever vote for a less preferred candidate over a perferred one. Approval voting still needs the voters to determine the "approving cutoff" in their mind. This process could be a bit strategic but not in a way that makes one lie about their true preferences. 
 
@@ -303,7 +299,7 @@ election.AddBallot(pd.Series({"cand1":20,
 ```
 
 
-## Score Voting
+## 4.3 Score Voting
 
 What if instead of full approval and not approval one can express something in between? That's where score voting comes in. Voters vote on a scale (say 0 to 5) and the candidate with the highest total score wins. This gives more flexibility to voters comparing to approval voting. 
 
@@ -345,7 +341,7 @@ election.AddBallot(pd.Series({"cand1":-1,
 ```
 
 
-## STAR Voting
+## 4.4 STAR Voting
 
 STAR stands for "Score then Automatic Runoff". It is very similar to score voting: voters rate all candidates on a scale and candidates are ranked by their total score. On top of this, there is an additional runoff round between the 2 best candidates. In the runoff round, each ballot is considered one vote to the candidate with a higher score. The winner of the runoff round wins the election. 
 
@@ -375,7 +371,7 @@ def RunElection(self, candidates=None):
 ```
 
 
-## Ranked Choice Voting
+## 4.5 Ranked Choice Voting
 
 Ranked choice voting (RCV) is my favorite among these alternative voting methods I have introduced so far. Nonetheless, I also consider RCV to have the most number of disadvantages! Later in this section I'll explain RCV's pros and cons, and in the next section I'll explain how tier list voting, which I invented, fixed all the cons. 
 
@@ -433,15 +429,15 @@ print(election.AddBallot(["cand1", "cand2"]))
 print(election.AddBallot(pd.Series({"cand1":1,
                                     "cand2":2,
                                     "cand3":3})))
-print(election.AddBallot(pd.Series({"cand1":4,
+print(election.AddBallot(pd.Series({"cand3":9,
                                     "cand2":6,
-                                    "cand3":9})))
+                                    "cand1":4})))
 print(election.AddBallot(pd.Series({"cand1":4,
                                     "cand2":6})))
 ```
 
 
-## Tier List Voting (original)
+## 4.6 Tier List Voting (original)
 
 (other possible names include ranked choice approval voting, flexible ranked choice voting, ...)
 
@@ -449,31 +445,90 @@ In the last section I thoroughly explained the flaws of RCV. In order to fix the
 
 Just like the name indicates, in TLV each voter will give a tier list to all candidates. Ideally voters can give as many tiers as possible (possibly one tier for each candidate!), but there could be practical limitations like the ballot size. When presented with any subset of candidates, the ballot votes for the highest tier that contains a presented candidate (since a ballot might vote arbitrarily many candidates per round, TLV can also be called ranked choice approval voting). And just like RCV, the overall format is repeatedly eliminating candidate at the bottom until there's a winner. In other words, the first round is like an approval voting for everyone's top tier. Then as candidates are eliminated, ballots might vote for lower tiers instead. 
 
-Ballot size is no longer a concern for TLV: to prevent the number of slots from growing quadratically, one can limit the number of tiers a voter can give, which barely affects the voter's ability to . 
+Ballot size is no longer a concern for TLV: to prevent the number of slots from growing quadratically, one can limit the number of tiers a voter can give, which still gives voters a high degree of freedom. STAR voting typically lets voters give a score from 0 to 5, taking 5 or 6 slots per candidate, which is a reasonable number of tier for TLV. Still, in an ideal setting, the number of tiers can be unlimited and voters can assign a tier to each candidate, effectively voting an RCV ballot. 
+
+The most significant differene between RCV and TLV is that TLV perfectly supports giving tied ranks. Not only does it gives more freedom to the voters and relieves them from tie-breaking, TLV is spoiler-proof! Recall that RCV is only semi-spoiler-proof because duplicates cannot shre a rank at the top. Now that with tied ranks allowed, no many how many duplicates enter the race, they will share a tier and always get voted for together! 
+
+And TLV is easier to vote than RCV! Just like STAR voting, voters can just "score" candidates one after another without backtracking and inserting incoming candidates to an existing list. 
+
+Spoiler-proofness: YES
+
+Semi-spoiler-proofness: YES
+
+TLV's constructor also supports 2 new parameters. The paramter that controls the number of tier is called allowed_tier instead of allowed_rank from RCV. Other than this difference in names, the usage is exactly the same as the usage of RCV's constructor. 
+
+```python
+def __init__(self, candidates, try_handle_invalid=True, reverse=False, 
+             allowed_tier=0):
+    super().__init__(candidates, try_handle_invalid)
+    """
+    New Parameters
+    reverse : bool, default=False
+        default is #1 is the most preferred and #2 the second, etc...
+        if set to True, larger numbers are more preferred instead
+    allowed_tier : int, default=0
+        the number of tiers each ballot is allowed to list, excluding a 
+        default tier at the bottom
+        if set to 0, there is no limit on it
+    """
+```
+
+Just like RCV, TLV supports adding a ballot through a pandas.Series or a list of strings. Additionally, TLV accepts a list of tiers, where each tier is a string or a list. 
+
+```python
+import pyvoting
+import pandas as pd
+election = pyvoting.TierListVoting(["cand1", "cand2", "cand3"])
+# these are all acceptable ballots and will be treated the same
+print(election.AddBallot([["cand1"], ["cand2", "cand3"]]))
+print(election.AddBallot(["cand1", ["cand2", "cand3"]]))
+print(election.AddBallot(["cand1", [], ["cand2", "cand3"]]))
+print(election.AddBallot(pd.Series({"cand1":1,
+                                    "cand2":2,
+                                    "cand3":2})))
+print(election.AddBallot(pd.Series({"cand3":6,
+                                    "cand2":6,
+                                    "cand1":4})))
+```
+
+
+## 4.7 Tiered Popularity Voting (original)
+
+Tiered popularity voting (TPV) is a variation of TLV that I designed for the purpose of popularity ranking for a very large, possibly hundreds or thousands, number of candidates. For example, anime character popularity ranking is a perfect scenario where TPV works best. 
+
+Just like TLV, in TPV voters put all candidates to a tier list. Since the number of candidates is often too large, most voters will only put a smaller proportion of candidates in the tier list and all other candidates will be put into the default bottom tier. Recall that a ballot is a function or a black box that takes in a subset of candidates and evaluates/votes on them. Instead of voting the best tier among the candidates in TLV, in TPV a ballot votes for all tiers except the bottom tier among the canidates. 
+
+Ranking thousands of characters in the anime world is a challenging voting scenario. [My Anime List](https://myanimelist.net/character.php) ranks the characters by the number of favorites, which is effectively approval voting. Although it is simple and clearly superior to plurality voting, it doesn't give voters enough degrees of freedom to express their opinion: for a huge pool of candidates, a binary score is insufficient to distinguish "know" and "really love". [补番目录](https://space.bilibili.com/24055770/article) 
 
 
 
-## Tiered Popularity Voting (original)
+
+
+
 
 补番目录
 
 my anime list
 
 
-## Normalized Score Voting (original)
+## 4.8 Normalized Score Voting (original)
 
 
 although the support for candidates seems to be in conflict, whenever a candidate is eliminated, its effect on other's scores is gone
 
-computationally expensive, only practical when run by a computer
+computationally expensive, only practical when run by computer
 
 rounding errors
 
-## Standardized Score Voting (original)
+## 4.9 Standardized Score Voting (original)
 
 ...
 
-# Features Coming Soon
+# 5. Features Coming Soon
 
 2 parameters each for Normalized Score Voting and Standardized Score Voting
+
+accepts python dictionaries
+
+Round-Rabin voting
 
