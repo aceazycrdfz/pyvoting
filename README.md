@@ -498,17 +498,19 @@ Tiered popularity voting (TPV) is a variation of TLV that I designed for the pur
 
 Just like TLV, in TPV voters put all candidates to a tier list. Since the number of candidates is often too large, most voters will only put a smaller proportion of candidates in the tier list and all other candidates will be put into the default bottom tier. Recall that a ballot is a function or a black box that takes in a subset of candidates and evaluates/votes on them. Instead of voting the best tier among the candidates in TLV, in TPV a ballot votes for all tiers except the bottom tier among the canidates. 
 
-Ranking thousands of characters in the anime world is a challenging voting scenario. [My Anime List](https://myanimelist.net/character.php) ranks the characters by the number of favorites, which is effectively approval voting. Although it is simple and clearly superior to plurality voting, it doesn't give voters enough degrees of freedom to express their opinion: for a huge pool of candidates, a binary score is insufficient to distinguish "know" and "really love". [补番目录](https://space.bilibili.com/24055770/article) 
+Ranking thousands of characters in the anime world is a challenging voting scenario. [My Anime List](https://myanimelist.net/character.php) ranks the characters by the number of favorites, which is effectively approval voting. Although it is simple and clearly superior to plurality voting, it doesn't give voters enough degrees of freedom to express their opinion: for a huge pool of candidates, a binary score is insufficient to distinguish "know" and "really love". 
 
+[补番目录](https://space.bilibili.com/24055770/video) hosts many monthly rankings of anime and anime characters and they use a better mechanism: candidates are divided into 3 or 5 divisions and an approval voting is hosted within each individual division. The full ranking is produced by appending the ranked results of each division. As a result, a candidate with more votes may be ranked behind another with less votes because they're in a later division, which makes sense because top divisions are more competitive. Then in each division, the top candidate advances to the next division and the bottom one falls back to the lower division next month. The advantage of hosting a seperate approval voting in each tier is voters get to express their opinions to each candidate relative to a smaller group of other candidates, which is why runoffs are commonly used. 
 
+To adapt to such elections, I modified TLV, where ballots vote a small number of candidates they really like, and designed TPV, where ballots vote a much bigger number of candidates they know or sort of like. A typical TPV election is very similar to approval voting when there are a a lot of candidates left. When there are less candidates left, the ballots that put all of them on the tier list  can still express their preference by not voting those at the bottom tier. As a result, the winner of TPV must be known by many voters and must be relatively liked more by other popular candidates at the top. 
 
+The disadvantage of TPV for these kind of voting is that updating results live as new ballots come in is time consuming: unlike approval voting, TPV must run the whole election again to update the result ranking. Nonetheless, this can be overcome by setting a refresh frequency, like once per day. 
 
+Spoiler-proofness: YES
 
+Semi-spoiler-proofness: YES
 
-
-补番目录
-
-my anime list
+TPV's usage is exactly the same as TLV. 
 
 
 ## 4.8 Normalized Score Voting (original)
