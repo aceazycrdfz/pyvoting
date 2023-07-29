@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
 # you need to change all these
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 DESCRIPTION = 'simulating elections with 9 choices of voting methods, including 4 I have invented'
 LONG_DESCRIPTION = 'simulating elections with 9 choices of voting methods, including 4 I have invented'
 
@@ -27,7 +27,7 @@ setup(
               "star voting", "ranked choice voting", "rcv", "tier list", 
               "tier list voting"],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",
