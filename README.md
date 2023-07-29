@@ -515,16 +515,39 @@ TPV's usage is exactly the same as TLV.
 
 ## 4.8 Normalized Score Voting (original)
 
+TLV and TPV are invented as improvements to RCV. Ballots in these 3 voting methods always vote 0 or 1 for each candidate, which makes scoring simple. To improve upon score voting and STAR voting, I invented normalized score voting (NSV) and standardized score voting (SSV), where ballots give non-binary scores. 
 
-although the support for candidates seems to be in conflict, whenever a candidate is eliminated, its effect on other's scores is gone
+In NSV and SSV, voters vote exactly the same as in score voting or STAR voting: score each candidate within a range, commonly 0 to 5. However, ballots do not report the exact score of the candidates when they are asked to score a subset of candidates. NSV and SSV follow the same general procedure as RCV, TLV, and TPV: repeatedly eliminate the bottom scoring candidate until there's one left. 
 
-computationally expensive, only practical when run by computer
+When an NSV ballot is asked to evaluate a subset of candidates, it will first normalize these candidates' scores before returning them. To be precise, the scores of the presented candidates will undergo a linear transformation (shifting + scaling) that turns the maximum score 1 and the minimum score -1. If all these candidates have the same score, all of them will become 0. 
 
-rounding errors
+The motive for doing this is to get a better measure of comparative opinion of the candidates. STAR voting does this by adding a runoff round in which the comparative preference of the top 2 candidates are measured equally accross all ballots. NSV takes this idea further by adopting the elimination idea and dynamically normalize the set of scores to equalize every ballot's maximum and minimum. I choose to let the maximum be 1 and minimum be 0 because I intend to let a positive total score represent a relatively preferred candidate and a negative score represent a relatively disliked candidate. The overall support for candidates are close to zero-sum. 
+
+NSV is spoiler-proof. Although the support for candidates seems to be in conflict due to normalization, whenever a candidate is eliminated, its effect on other's scores is gone. The existence of duplicates are not negatively affecting the candidate: the normalization result is only relevant to the maximum and minimum scores so duplicate scores have no effect at all. 
+
+The downside of NSV is that it is very computationally expensive. Therefore, it is only practically feasible when run by computer. Decimal numbers (floating point numbers) are also very common, meaning that floating point errors during computation may produce a wrong result. Fortunately, this is super rare and a one-on-one runoff can do the tie-breaking in case of very close scores. 
+
+Spoiler-proofness: YES
+
+Semi-spoiler-proofness: YES
+
+The usage of NSV is exactly the same as score voting. Please refer to the score voting section on how to use the score_range and only_int parameters. 
+
 
 ## 4.9 Standardized Score Voting (original)
 
-...
+SSV is a variation of NSV, with the same general structure and motivation. The only difference is the SSV ballots will standardize the scores of the selected candidates: a linear transformation (shifting + scaling) that lets the scores to have a mean of 0 and standard deviation of 1. 
+
+This standardization transformation is a better data preprocessing technique than the normalization method in NSV. Unlike NSV, the overall support in each SSV ballot for candidates is exactly zero-sum. Moreover, the standard deviation of scores will be scaled to 1 (in each round), meaning that voters are more incentivized to give a score close to their true preference, since there is no use in polarizing the scores.  
+
+One downside of SSV is that it is not spoiler-proof, like NSV. This is because if a voter really likes a certain candidate (give a positive score), the existence of duplicate will indirectly harm all the scores of all duplicates because the overall mean will be shifted to 0. However, for voters that give negative scores to that candidate, duplicates actually alleviate that negativeness! Therefore, SSV is the only voting method in this package that spoiler candidates could be beneficial! The combined effect should be close to neutural so this is not a concern. Because SSV repeatedly eliminate the bottom candidate, it satisfy semi-spoiler-proofness. 
+
+Spoiler-proofness: NO
+
+Semi-spoiler-proofness: YES
+
+The usage of SSV is exactly the same as score voting and NSV. Please refer to the score voting section on how to use the score_range and only_int parameters. 
+
 
 # 5. Features Coming Soon
 
