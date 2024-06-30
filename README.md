@@ -3,9 +3,9 @@ This is an election framework in python that simulates 9 voting methods, includi
 
 When this code is used to simulate an election, it will return a list ranking all candidates, possibly with tied ranks. My code will also attach a log to each candidate, which documents the processes and outcomes of each step in the election. By inspecting this log you can extract the score of each candidate and understand the whole election process (very useful for some complicated voting methods). You can use whatever method you prefer to visualize the election result using the log. Refer to the documentation of the RunElection function in Voting.py for its format (except for STAR voting, please refer to the STAR voting section for its special log format). 
 
-My code also support both single-winner elections (RunElection) and multi-winner elections (RunMultiWinnerElection), which is great for proportional representation. Although their usage is very similar, there is a distinction and I will thoroughly explain how they work in the Theoretical Motivations section. 
+My code also support both single-winner elections (RunElection) and multi-winner elections (RunMultiWinnerElection), which is great for proportional representation. Although their usages are very similar, there is a distinction and I will thoroughly explain how they work in the Theoretical Motivations section. 
 
-This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can even accept and interpret ballots that doesn't strictly follow the required format. There are many examples for acceptable ballot input when I later introduce the voting methods. 
+This code is very robust and versatile. It ranks all candidates and performs tie-breaking exhaustively. It can even accept and interpret ballots that don't strictly follow the required format. There are many examples for acceptable ballot input when I later introduce the voting methods. 
 
 The OOP nature of this code makes it very easy to develop new voting methods under my framework! All xxxVoting classes inherit the Voting class where the core RunElection function was already inplemented. You can easily design your own voting method by mimicking my implementations of these xxxVoting.py. There are very detailed comments explaining every step in the code. Essentialy, all you need to do is to redefine the Vote function of the your Ballot class. 
 
@@ -373,7 +373,7 @@ def RunElection(self, candidates=None):
 
 ## 4.5 Ranked Choice Voting
 
-Ranked choice voting (RCV) is my favorite among these alternative voting methods I have introduced so far. Nonetheless, I also consider RCV to have the most number of disadvantages! Later in this section I'll explain RCV's pros and cons, and in the next section I'll explain how tier list voting, which I invented, fixed all the cons. 
+Ranked choice voting (RCV) is my favorite among these alternative voting methods I have introduced so far. Nonetheless, I also consider RCV to have the most number of problems! Later in this section I'll explain RCV's pros and cons, and in the next section I'll explain how tier list voting, which I invented, fixed all the cons. 
 
 In a vanilla RCV, each voter ranks all candidates from the favorite the least favorite. When presented with any subset of candidates, the ballot is treated as a vote for the most preferred candidate in the subset. An RCV election is an elimination process like I explained in the Incentives for Elimination Process section: at first all candidates are included and all ballots vote on them. The candidate(s) with the least score is eliminated (if more than one, will eliminate them all and recursively tie-break on them, refer to my code), and all ballots vote again on the survivors. This is repeated until one candidate is left (equivalently, until one candidate wins more than half vote) and this candidate wins. Because this ranked list ballot automatically votes multiples times, RCV is also called instant runoff voting (IRV). 
 
@@ -447,7 +447,7 @@ Just like the name indicates, in TLV each voter will give a tier list to all can
 
 Ballot size is no longer a concern for TLV: to prevent the number of slots from growing quadratically, one can limit the number of tiers a voter can give, which still gives voters a high degree of freedom. STAR voting typically lets voters give a score from 0 to 5, taking 5 or 6 slots per candidate, which is a reasonable number of tiers for TLV. Still, in an ideal setting, the number of tiers can be unlimited and voters can assign a tier to each candidate, effectively voting an RCV ballot. 
 
-The most significant differene between RCV and TLV is that TLV perfectly supports giving tied ranks. Not only does it gives more freedom to the voters and relieves them from tie-breaking, TLV is spoiler-proof! Recall that RCV is only semi-spoiler-proof because duplicates cannot shre a rank at the top. Now that with tied ranks allowed, no many how many duplicates enter the race, they will share a tier and always get voted for together! 
+The most significant differene between RCV and TLV is that TLV perfectly supports giving tied ranks. Not only does it gives more freedom to the voters and relieves them from tie-breaking, TLV is spoiler-proof! Recall that RCV is only semi-spoiler-proof because duplicates cannot share a rank at the top. Now that with tied ranks allowed, no many how many duplicates enter the race, they will share a tier and always get voted for together! 
 
 And TLV is easier to vote than RCV! Just like STAR voting, voters can just "score" candidates one after another without backtracking and inserting incoming candidates to an existing list. 
 
